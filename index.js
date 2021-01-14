@@ -16,26 +16,27 @@ const pool = createPool({
 });
 
 app.get("/signup/:name/:username/:pwd", (req,res) => {
+    const sign = async () => {
 
-    var name = req.params.name;
-    var uname = req.params.username;
-    var pass = req.params.pwd;
+        var name = req.params.name;
+        var uname = req.params.username;
+        var pass = req.params.pwd;
 
-    const user = { name : uname };
-    
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-    //res.json({ accessToken : accessToken});
-    const tokenWithSecretKey = "secretKey+" + accessToken;
-
-    pool.query(`INSERT INTO userInfo(name, username, pass, token) VALUES (?,?,?,?)`, [name,uname,pass,tokenWithSecretKey], (err, results, feilds) => {
-        if(err)
-            res.send(`Cannot sign in : ${err.sqlMessage}`);
-        else{
+        const user = { name : uname };
+        
+        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+        const tokenWithSecretKey = "secretKey+" + accessToken;
+        
+        try{
+            const result = await pool.query(`INSERT INTO userInfo(name, username, pass, token) VALUES (?,?,?,?)`, [name,uname,pass,tokenWithSecretKey]);
             res.send(` signup successful, your token is : ${accessToken}`);
+        } catch(err){
+                res.send(`Cannot sign in : ${err}`);
         }
-    });
+    }
+    sign();
 
-})
+});
 
 app.get("/login/:username/:pwd",  (req,res) => {
 
@@ -43,20 +44,22 @@ app.get("/login/:username/:pwd",  (req,res) => {
     var pass = req.params.pwd;
 
     pool.query(`select username,pass,token from userInfo where username=?`, [uname], (err, results, feilds) => {
-        if(err)
+        if(err){
             console.log(err);
+        }
         else if(results[0].pass==pass){
             const authHeader = results[0].token;
-            const token = authHeader && authHeader.split('+')[1]
-            if (token == null) return res.send(`token is is null 401 ${token}`);
-  
+            const token = authHeader && authHeader.split('+')[1];
+            if (token == null){
+                return res.send(`token is is null 401 ${token}`);
+            }
             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
                 console.log(err);
-                if (err) 
+                if (err){
                     return res.sendStatus(403);
+                }
                 res.json(results);
             })
-
         }
         else
             res.send("Username and Password Does not match");
