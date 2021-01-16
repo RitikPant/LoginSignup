@@ -3,9 +3,6 @@ const app = express();
 let router = express.Router();
 
 
-const jwt = require('jsonwebtoken')
-router.use(express.json());
-
 const { createPool } = require("mysql");
 const pool = createPool({
     host:"localhost",
@@ -24,14 +21,12 @@ router
         var uname = req.params.username;
         var pass = req.params.pwd;
 
-        const user = { name : uname };
-        
-        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-        const tokenWithSecretKey = "secretKey+" + accessToken;
+        const tokenWithSecretKey = "-1";
         
         try{
-            const result = await pool.query(`INSERT INTO userInfo(name, username, pass, token) VALUES (?,?,?,?)`, [name,uname,pass,tokenWithSecretKey]);
-            res.send(` signup successful, your token is : ${accessToken}`);
+            const signUpResult = await pool.query(`INSERT INTO userInfo(name, username, pass, token) VALUES (?,?,?,?)`, [name,uname,pass,tokenWithSecretKey]);
+            const logInResult = await pool.query(`INSERT INTO tokens(username, token) VALUES (?,?)`, [uname,"0"]);
+            res.send(` signup successful`);
         } catch(err){
                 res.send(`Cannot sign in : ${err}`);
         }

@@ -8,5 +8,8 @@ router.use("/signup", signup);
 const login = require("./login/login");
 router.use("/login", login);
 
+const myInfo = require("./myInfo/myInfo");
+router.use("/myInfo", myInfo);
+
 
 module.exports = router;
