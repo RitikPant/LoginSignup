@@ -27,6 +27,10 @@ router
         if(err){
             res.send(err);
         }
+        else if(results == "")
+        {
+            res.send("User not found");
+        }
         else if(results[0].pass==pass){
 
             const user = { name : uname };
@@ -35,9 +39,14 @@ router
             const tokenWithSecretKey = "secretKey+" + accessToken;
             
             pool.query(`UPDATE tokens SET token=? WHERE username=?`, [tokenWithSecretKey, uname], (err,results,fields) => {
-                console.log(err);
+                if(err){
+                    console.log(err);
+                }
+                res.send("Login succefull, go to myInfo page ");
             });
-            res.send("Login succefull, go to myInfo page ");
+        }
+        else{
+            res.send("Username and password does not match");
         }
 
     });

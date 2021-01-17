@@ -16,7 +16,7 @@ const pool = createPool({
 });
 
 router
-.route("/:username")
+.route("/:username/")
 .get((req,res) => {
     var uname = req.params.username;
     
@@ -26,14 +26,13 @@ router
             res.send(err);
         }
         else if(results == ""){
-            res.send("Not found");
+            res.send("You are not sign in");
         }
-        else {
-            
+        else{
             const authHeader = results[0].token;
             const token = authHeader && authHeader.split('+')[1];
 
-            if (token == null || token == "0"){
+            if (token == null || token == uname){
                 return res.send(`You are not logged in`);
             }
 
@@ -41,10 +40,14 @@ router
                 if (err){
                     return res.sendStatus(403);
                 }
-                return res.json(results[0].username);
+                pool.query(`UPDATE tokens SET token=? WHERE username=?`, [uname, uname], (err,results,fields) => {
+                    if(err)
+                        res.send(err);
+                    res.send("Logout successfull, go to login page ");
+                });
             })
         }
-})
-})
+    });
+});
 
 module.exports = router;
